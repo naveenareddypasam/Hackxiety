@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Hackxiety"
+        tools:targetApi="31">
+        <activity
+            android:name="com.unt.hackxiety.EduActivity"
+            android:exported="false"
+            android:label="EduActivity" />
+        <activity
+            android:name="com.unt.hackxiety.login.LoginActivity"
+            android:exported="false"
+            android:label="@string/title_activity_login" />
+        <activity
+            android:name=".RegistrationActivity"
+            android:exported="false"
+            android:label="RegistrationActivity" />
+        <activity
+            android:name="com.unt.hackxiety.HomeActivity"
+            android:exported="false"
+            android:label="HomeActivity" />
+        <activity
+            android:name="com.unt.hackxiety.SOSAcitvity"
+            android:exported="false"
+            android:taskAffinity="com.unt.hackxiety.SOSAcitvity">
+        </activity>
+        <activity
+            android:name="com.unt.hackxiety.AffirmationsAcitvity"
+            android:exported="false"
+            android:taskAffinity="com.unt.hackxiety.AffirmationsAcitvity">
+        </activity>
+        <activity
+            android:name="com.unt.hackxiety.ProfileActivity"
+            android:exported="false"
+            android:label="ProfileActivity" />
+        <activity
+            android:name="com.unt.hackxiety.AffirmationsActivitySOS"
+            android:exported="false"
+            android:label="AffirmationsActivitySOS" />
+        <activity
+            android:name="com.unt.hackxiety.EmergencyContactActivity"
+            android:exported="false"
+            android:label="EmergencyContactActivity" />
+        <activity
+            android:name="com.unt.hackxiety.ExcersiceActivity"
+            android:exported="false"
+            android:label="ExcersiceActivity" />
+        <activity
+            android:name="com.unt.hackxiety.GroundingMessageActivity"
+            android:exported="false"
+            android:label="GroundingMessageActivity" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:taskAffinity=".MainActivity"
+            android:theme="@style/Theme.Hackxiety">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
