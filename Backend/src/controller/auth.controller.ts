@@ -1,128 +1,122 @@
-/**
- * PROPER REFACTORING REQUIRED
- */
-
 import {NextFunction, Request, Response} from "express";
 import {db} from "../server";
-import {checkPassword, hashPassword} from "../utils/bcrypt";
+import Bcrypt from "../utils/bcrypt";
 import {Document, ObjectId, WithId} from "mongodb";
 import jwt from "jsonwebtoken";
 import {User as UserDetails} from "../types/user.type";
+import {assert} from "console";
+import CustomError from "../utils/CustomError";
+import HTTP from "../utils/statusCodeConfig";
 export default class Auth {
+  private bcrypt: Bcrypt = new Bcrypt();
   constructor() {}
 
   async signup(req: Request, res: Response, next: NextFunction) {
-    try {
-      // username, email, phone number, emergency contact, role
-      const {
-        username,
-        email,
-        password,
-        confirm_password,
-        phone_number,
-        emergency_contact,
-      }: {
-        username: string;
-        email: string;
-        password: string;
-        confirm_password: string;
-        phone_number: string;
-        emergency_contact: string;
-      } = {...req.body};
+    const {
+      username,
+      email,
+      password,
+      confirm_password,
+      phone_number,
+      emergency_contact,
+    }: {
+      username: string;
+      email: string;
+      password: string;
+      confirm_password: string;
+      phone_number: string;
+      emergency_contact: string;
+    } = {...req.body};
 
-      if (
-        !username ||
-        !email ||
-        !password ||
-        !confirm_password ||
-        !phone_number ||
-        !emergency_contact
-      ) {
-        return res.status(400).json({
-          message:
-            "User must provide 'username', 'email', 'password', 'confirm_password', 'phone_number', 'emergency_contact' field.",
-        });
-      }
-
-      if (phone_number.length != 10) {
-        return res.status(400).json({
-          message: "Invalid phone number",
-        });
-      }
-      if (password !== confirm_password) {
-        return res.status(400).json({
-          message: "Password fields does not match",
-        });
-      }
-
-      const user = <WithId<UserDetails>[]>await db
-        .collection("Users")
-        .find({$or: [{username}, {email}, {phone_number}]})
-        .toArray();
-
-      if (user.length > 0) {
-        return res.status(400).json({
-          message: "Username or email or phone number alreaddy taken.",
-        });
-      }
-      const hashedPassword = await hashPassword(password);
-
-      await db.collection("Users").insertOne({
-        username,
-        password: hashedPassword,
-        role: "user",
-        email,
-        phone_number,
-        emergency_contact,
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
-
-      res.status(200).json({
-        message: "You're signed up. Please login.",
-      });
-    } catch (err) {
-      res.status(500).json({
-        message: "Soething went wrong",
-      });
+    if (
+      !username ||
+      !email ||
+      !password ||
+      !confirm_password ||
+      !phone_number ||
+      !emergency_contact
+    ) {
+      const error = new CustomError(
+        "Users must provide 'username', 'email', 'password', 'confirm_password', 'phone_number', 'emergency_contact' field.",
+        HTTP.BAD_REQUEST
+      );
+      return next(error);
     }
+
+    if (phone_number.length != 10) {
+      const error = new CustomError("Invalid phone number", HTTP.BAD_REQUEST);
+
+      return next(error);
+    }
+
+    if (password !== confirm_password) {
+      const error = new CustomError(
+        "Password fields does not match",
+        HTTP.BAD_REQUEST
+      );
+      return next(error);
+    }
+
+    const user = <WithId<UserDetails>[]>await db
+      .collection("Users")
+      .find({$or: [{username}, {email}, {phone_number}]})
+      .toArray();
+
+    if (user.length > 0) {
+      const error = new CustomError(
+        "Username or email or phone number alreaddy taken.",
+        HTTP.BAD_REQUEST
+      );
+
+      return next(error);
+    }
+    const hashedPassword = await this.bcrypt.hashPassword(password);
+
+    await this.insertUser(
+      username,
+      hashedPassword,
+      email,
+      phone_number,
+      emergency_contact
+    );
+
+    res.status(HTTP.OK).json({
+      message: "You're signed up. Please login.",
+    });
   }
 
   async login(req: Request, res: Response, next: NextFunction) {
-    try {
-      const {username, password}: {username: string; password: string} =
-        req.body;
+    const {username, password}: {username: string; password: string} = req.body;
 
-      if (!username || !password) {
-        return res.status(401).json({
-          message: "Username or Password not provided.",
-        });
-      }
+    if (!username || !password) {
+      const error = new CustomError(
+        "Username or Password not provided.",
+        HTTP.UNAUTHORIZED
+      );
+      return next(error);
+    }
 
-      const user = <WithId<UserDetails>>(
-        await db.collection("Users").findOne({username})
+    const user = <WithId<UserDetails>>(
+      await db.collection("Users").findOne({username})
+    );
+
+    if (!user || !(await this.bcrypt.checkPassword(user.password, password))) {
+      const error = new CustomError(
+        "Username or Password does not match",
+        HTTP.UNAUTHORIZED
       );
 
-      if (!user || !(await checkPassword(user.password, password))) {
-        return res.status(401).json({
-          message: "Username or Password does not match",
-        });
-      }
-
-      const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET!, {
-        expiresIn: "7d",
-      });
-
-      res.status(200).json({
-        messsage: "Logged in.",
-        token,
-      });
-    } catch (err) {
-      console.log(err);
-      res.status(500).json({
-        message: "Soething went wrong",
-      });
+      return next(error);
     }
+
+    const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET!, {
+      expiresIn: "7d",
+    });
+
+    res.status(HTTP.OK).json({
+      messsage: "Logged in.",
+      token,
+    });
   }
 
   async isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -132,9 +126,11 @@ export default class Auth {
         (req.headers.authorization &&
           req.headers.authorization.split(" ")[0] !== "Bearer")
       ) {
-        return res.status(401).json({
-          message: "You are not authenticated.",
-        });
+        const error = new CustomError(
+          "You are not authenticated.",
+          HTTP.UNAUTHORIZED
+        );
+        return next(error);
       }
 
       const token = req.headers.authorization.split(" ")[1];
@@ -145,7 +141,8 @@ export default class Auth {
             return resolve(payload);
           }
 
-          return res.status(401).json({mesasge: "falied"});
+          const error = new CustomError("falied", HTTP.UNAUTHORIZED);
+          return next(error);
         });
       });
 
@@ -157,7 +154,7 @@ export default class Auth {
 
       next();
     } catch (err) {
-      res.status(401).json({message: "Ivalid JWT"});
+      res.status(HTTP.UNAUTHORIZED).json({message: "Ivalid JWT"});
     }
   }
 
@@ -169,11 +166,32 @@ export default class Auth {
     );
 
     if (user.role !== "admin") {
-      return res.status(403).json({
-        message: "You are not authorised to access this feature.",
-      });
+      const error = new CustomError(
+        "You are not authorised to access this feature.",
+        HTTP.FORIBIDDEN
+      );
+      return next(error);
     }
 
     next();
+  }
+
+  private async insertUser(
+    username: string,
+    hashedPassword: string,
+    email: string,
+    phone_number: string,
+    emergency_contact: string
+  ) {
+    await db.collection("Users").insertOne({
+      username,
+      password: hashedPassword,
+      role: "user",
+      email,
+      phone_number,
+      emergency_contact,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
   }
 }

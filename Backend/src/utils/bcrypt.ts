@@ -1,9 +1,13 @@
 import bcrypt from "bcryptjs";
 
-export const hashPassword = async (password: string) =>
-  bcrypt.hash(password, 10);
+export default class Bcrypt {
+  constructor() {}
 
-export const checkPassword = async (
-  hashedPassword: string,
-  palinPassword: string
-) => bcrypt.compare(palinPassword, hashedPassword);
+  async hashPassword(password: string) {
+    return await bcrypt.hash(password, 10);
+  }
+
+  async checkPassword(hashedPassword: string, plainPassword: string) {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+  }
+}
