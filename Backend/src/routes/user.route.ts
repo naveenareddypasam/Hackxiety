@@ -15,8 +15,8 @@ router.get(
   auth.isAuthorised,
   asyncWrapper(user.getUsers)
 );
-router.post("/signup", asyncWrapper(auth.signup));
-router.post("/login", asyncWrapper(auth.login));
+router.post("/signup", asyncWrapper(auth.signup.bind(auth)));
+router.post("/login", asyncWrapper(auth.login.bind(auth)));
 router.get("/profile", auth.isAuthenticated, asyncWrapper(user.getProfile));
 router.patch(
   "/profile-image",
