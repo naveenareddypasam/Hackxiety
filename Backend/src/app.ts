@@ -1,12 +1,14 @@
 import express, {Express, NextFunction, Request, Response} from "express";
 import userRoute from "./routes/user.route";
 import journalRoute from "./routes/journal.route";
+import mongoSanitize from "express-mongo-sanitize";
 import CustomError from "./utils/CustomError";
 
 const app: Express = express();
 
 app.use(express.json());
 
+app.use(mongoSanitize());
 
 app.use("/v1/users", userRoute);
 app.use("/v1/journals", journalRoute);
