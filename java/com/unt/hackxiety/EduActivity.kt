@@ -16,17 +16,18 @@ class EduActivity: AppCompatActivity()  {
             val intent = Intent(this@EduActivity, HomeActivity::class.java)
             startActivity(intent)
         }
-        val affirmation1 = findViewById<CardView>(R.id.affirmation1)
-        affirmation1.setOnClickListener {
-            openLinkInBrowser("https://www.greaterlowellpsychassoc.com/blog/when-does-anxiety-require-medical-intervention")
+        val articles[3] = {"https://www.greaterlowellpsychassoc.com/blog/when-does-anxiety-require-medical-intervention","https://www.beyondblue.org.au/mental-health/anxiety/treatments-for-anxiety/anxiety-management-strategies","https://newsinhealth.nih.gov/2016/03/understanding-anxiety-disorders"}
+        val articleTile1 = findViewById<CardView>(R.id.affirmation1)
+        articleTile1.setOnClickListener {
+            openLinkInBrowser(articles[0)
         }
-        val affirmation2 = findViewById<CardView>(R.id.affirmation2)
-        affirmation2.setOnClickListener {
-            openLinkInBrowser("https://www.beyondblue.org.au/mental-health/anxiety/treatments-for-anxiety/anxiety-management-strategies")
+        val articleTile2 = findViewById<CardView>(R.id.affirmation2)
+        articleTile2.setOnClickListener {
+            openLinkInBrowser(articles[1)
         }
-        val affirmation3 = findViewById<CardView>(R.id.affirmation3)
-        affirmation3.setOnClickListener {
-            openLinkInBrowser("https://newsinhealth.nih.gov/2016/03/understanding-anxiety-disorders")
+        val articleTile3 = findViewById<CardView>(R.id.affirmation3)
+        articleTile3.setOnClickListener {
+            openLinkInBrowser(articles[2])
         }
     }
     private fun openLinkInBrowser(url: String) {
